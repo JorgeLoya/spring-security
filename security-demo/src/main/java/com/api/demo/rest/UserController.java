@@ -1,6 +1,7 @@
 package com.api.demo.rest;
 
 import com.api.demo.constants.DemoConstants;
+import com.api.demo.dto.UserDTO;
 import com.api.demo.service.UserService;
 import com.api.demo.utils.ResponseUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,9 +19,9 @@ public class UserController {
     private UserService userService;
 
     @PostMapping("/signup")
-    public ResponseEntity<String> registrarUsuario(@RequestBody(required = true) Map<String, String> requestMap) {
+    public ResponseEntity<String> registrarUsuario(@RequestBody(required = true) UserDTO userDTO) {
         try {
-            return userService.signUp(requestMap);
+            return userService.signUp(userDTO);
         } catch (Exception ex) {
             ex.printStackTrace();
         }
@@ -28,9 +29,9 @@ public class UserController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<String> login(@RequestBody(required = true) Map<String, String> requestMap) {
+    public ResponseEntity<String> login(@RequestBody(required = true) UserDTO userDTO) {
         try {
-            return userService.login(requestMap);
+            return userService.login(userDTO);
         } catch (Exception e) {
             e.printStackTrace();
         }

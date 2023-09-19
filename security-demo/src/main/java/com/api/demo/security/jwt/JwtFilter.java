@@ -12,6 +12,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
+import org.springframework.util.ObjectUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
@@ -34,28 +35,53 @@ public class JwtFilter extends OncePerRequestFilter {
         if(request.getServletPath().matches("/user/login|/user/forgotPassword|/user/signup")) {
             filterChain.doFilter(request, response);
         } else {
-            String authorizationHeader = request.getHeader("Authorization");
-            String token = null;
 
-            if(authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
-                token = authorizationHeader.substring(7);
-                username = jwtUtil.extractUserName(token);
-                claims = jwtUtil.extractAllClaims(token);
+            if(!hasAuthorizationBearer(request)) {
+                filterChain.doFilter(request, response);
+                return;
             }
 
-            if(username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-                UserDetails userDetails = customerDetailsService.loadUserByUsername(username);
-                if(jwtUtil.validateToken(token,userDetails)) {
-                    UsernamePasswordAuthenticationToken usernamePasswordAuthenticationToken = new UsernamePasswordAuthenticationToken(userDetails,null,userDetails.getAuthorities());
-                    new WebAuthenticationDetailsSource().buildDetails(request);
-                    SecurityContextHolder.getContext().setAuthentication(usernamePasswordAuthenticationToken);
-                }
+            String token = getAccessToken(request);
+
+            if(!jwtUtil.validateAccessToken(token)) {
+                filterChain.doFilter(request, response);
+                return;
             }
 
+            setAuthenticationContext(token, request);
             filterChain.doFilter(request,response);
 
         }
     }
+
+    private void setAuthenticationContext(String token, HttpServletRequest request) {
+        UserDetails userDetails = customerDetailsService.loadUserByUsername(jwtUtil.getSubject(token));
+
+        UsernamePasswordAuthenticationToken
+                authentication = new UsernamePasswordAuthenticationToken(userDetails, null, null);
+
+        authentication.setDetails(
+                new WebAuthenticationDetailsSource().buildDetails(request));
+
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+    }
+
+    private boolean hasAuthorizationBearer(HttpServletRequest request) {
+        String header = request.getHeader("Authorization");
+        if (ObjectUtils.isEmpty(header) || !header.startsWith("Bearer")) {
+            return false;
+        }
+
+        return true;
+    }
+
+    private String getAccessToken(HttpServletRequest request) {
+        String header = request.getHeader("Authorization");
+        String token = header.split(" ")[1].trim();
+        return token;
+    }
+
+    // Verify the methods below
 
     public Boolean isAdmin() {
         return "admin".equalsIgnoreCase((String) claims.get("role"));
