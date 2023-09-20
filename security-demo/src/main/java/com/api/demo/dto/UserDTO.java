@@ -2,8 +2,12 @@ package com.api.demo.dto;
 
 import lombok.Data;
 
+import java.util.List;
+
 @Data
 public class UserDTO {
+
+    private Integer id;
 
     private String email;
 
@@ -11,6 +15,10 @@ public class UserDTO {
 
     private String name;
 
-    private String role;
+    private List<String> roles;
+
+    private String newPassword;
+
+    private String oldPassword;
 
 }

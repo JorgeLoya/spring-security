@@ -4,6 +4,7 @@ import com.api.demo.constants.DemoConstants;
 import com.api.demo.dto.UserDTO;
 import com.api.demo.service.UserService;
 import com.api.demo.utils.ResponseUtils;
+import jakarta.annotation.security.RolesAllowed;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -43,14 +44,22 @@ public class UserController {
         return new ResponseEntity<>("Hello Guys!", HttpStatus.OK);
     }
 
-    @GetMapping("/greetings/admin")
-    public ResponseEntity<String> adminGreetings() {
-        return new ResponseEntity<>("Hello Admin!", HttpStatus.OK);
+    @GetMapping("/greetings/editor")
+    @RolesAllowed("ROLE_EDITOR")
+    public ResponseEntity<String> editorGreetings() {
+        return new ResponseEntity<>("Hello Editor!", HttpStatus.OK);
     }
 
-    @GetMapping("/greetings/user")
-    public ResponseEntity<String> userGreetings() {
-        return new ResponseEntity<>("Hello User!", HttpStatus.OK);
+    @GetMapping("/greetings/customer")
+    @RolesAllowed("ROLE_CUSTOMER")
+    public ResponseEntity<String> customerGreetings() {
+        return new ResponseEntity<>("Hello Customer!", HttpStatus.OK);
+    }
+
+    @GetMapping("/greetings/custedit")
+    @RolesAllowed({"ROLE_CUSTOMER", "ROLE_EDITOR"})
+    public ResponseEntity<String> custeditGreetings() {
+        return new ResponseEntity<>("Hello Customer or Editor!", HttpStatus.OK);
     }
 
 }
