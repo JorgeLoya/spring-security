@@ -1,5 +1,7 @@
 package com.api.demo.security.jwt;
 
+import com.api.demo.pojo.Role;
+import com.api.demo.pojo.User;
 import com.api.demo.security.CustomerDetailsService;
 import io.jsonwebtoken.Claims;
 import jakarta.servlet.FilterChain;
@@ -28,7 +30,9 @@ public class JwtFilter extends OncePerRequestFilter {
 
     private String username = null;
 
-    private Claims claims = null;
+    public static final String AUTHORIZATION = "Authorization";
+
+    public static final String BEARER = "Bearer ";
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
@@ -49,10 +53,10 @@ public class JwtFilter extends OncePerRequestFilter {
     }
 
     private void setAuthenticationContext(String token, HttpServletRequest request) {
-        UserDetails userDetails = customerDetailsService.loadUserByUsername(jwtUtil.getSubject(token));
+        UserDetails userDetails = getUserDetails(token);
 
         UsernamePasswordAuthenticationToken
-                authentication = new UsernamePasswordAuthenticationToken(userDetails, null, null);
+                authentication = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
 
         authentication.setDetails(
                 new WebAuthenticationDetailsSource().buildDetails(request));
@@ -60,9 +64,27 @@ public class JwtFilter extends OncePerRequestFilter {
         SecurityContextHolder.getContext().setAuthentication(authentication);
     }
 
+    private UserDetails getUserDetails(String token) {
+        User userDetails = new User();
+        Claims claims2 = jwtUtil.parseClaims(token);
+
+        String subject = (String) claims2.get(Claims.SUBJECT);
+        String roles = (String) claims2.get("roles");
+
+        roles = roles.replace("[", "").replace("]", "");
+        String[] roleNames = roles.split(",");
+
+        for (String roleName : roleNames) {
+            userDetails.addRole(new Role(roleName.trim()));
+        }
+
+        userDetails.setEmail(subject);
+        return userDetails;
+    }
+
     private boolean hasAuthorizationBearer(HttpServletRequest request) {
-        String header = request.getHeader("Authorization");
-        if (ObjectUtils.isEmpty(header) || !header.startsWith("Bearer")) {
+        String header = request.getHeader(AUTHORIZATION);
+        if (ObjectUtils.isEmpty(header) || !header.startsWith(BEARER)) {
             return false;
         }
 
@@ -70,23 +92,9 @@ public class JwtFilter extends OncePerRequestFilter {
     }
 
     private String getAccessToken(HttpServletRequest request) {
-        String header = request.getHeader("Authorization");
+        String header = request.getHeader(AUTHORIZATION);
         String token = header.split(" ")[1].trim();
         return token;
-    }
-
-    // Verify the methods below
-
-    public Boolean isAdmin() {
-        return "admin".equalsIgnoreCase((String) claims.get("role"));
-    }
-
-    public Boolean isUser() {
-        return "user".equalsIgnoreCase((String) claims.get("role"));
-    }
-
-    public String getCurrentUser() {
-        return username;
     }
 
 }

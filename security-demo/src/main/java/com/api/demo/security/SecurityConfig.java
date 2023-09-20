@@ -1,11 +1,13 @@
 package com.api.demo.security;
 
 import com.api.demo.security.jwt.JwtFilter;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -17,6 +19,9 @@ import org.springframework.web.cors.CorsConfiguration;
 
 @Configuration
 @EnableWebSecurity
+@EnableGlobalMethodSecurity(
+        prePostEnabled = false, securedEnabled = false, jsr250Enabled = true
+)
 public class SecurityConfig {
 
     @Autowired
@@ -36,15 +41,20 @@ public class SecurityConfig {
     protected SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity) throws Exception {
         httpSecurity.cors().configurationSource(request -> new CorsConfiguration().applyPermitDefaultValues())
                 .and()
-                .csrf().disable()
-                .authorizeHttpRequests()
-                .requestMatchers("/user/login","/user/signup","/user/forgotPassword")
-                .permitAll()
-                .anyRequest()
-                .authenticated()
-                .and().exceptionHandling()
-                .and().sessionManagement()
-                .sessionCreationPolicy(SessionCreationPolicy.STATELESS);
+                .csrf().disable();
+        httpSecurity.sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
+        httpSecurity.authorizeRequests()
+                .requestMatchers("/user/login","/user/signup").permitAll()
+                .anyRequest().authenticated();
+        httpSecurity.exceptionHandling()
+                .authenticationEntryPoint(
+                        (request, response, ex) -> {
+                            response.sendError(
+                                    HttpServletResponse.SC_UNAUTHORIZED,
+                                    ex.getMessage()
+                            );
+                        }
+                );
         httpSecurity.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
         return httpSecurity.build();
     }
