@@ -1,8 +1,9 @@
 package com.api.demo.dto;
 
+import com.api.demo.pojo.Role;
 import lombok.Data;
 
-import java.util.List;
+import java.util.Set;
 
 @Data
 public class UserDTO {
@@ -15,7 +16,7 @@ public class UserDTO {
 
     private String name;
 
-    private List<String> roles;
+    private Set<Role> roles;
 
     private String newPassword;
 

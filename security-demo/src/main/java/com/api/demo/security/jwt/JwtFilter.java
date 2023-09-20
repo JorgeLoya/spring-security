@@ -30,7 +30,9 @@ public class JwtFilter extends OncePerRequestFilter {
 
     private String username = null;
 
-    private Claims claims = null;
+    public static final String AUTHORIZATION = "Authorization";
+
+    public static final String BEARER = "Bearer ";
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
@@ -81,8 +83,8 @@ public class JwtFilter extends OncePerRequestFilter {
     }
 
     private boolean hasAuthorizationBearer(HttpServletRequest request) {
-        String header = request.getHeader("Authorization");
-        if (ObjectUtils.isEmpty(header) || !header.startsWith("Bearer")) {
+        String header = request.getHeader(AUTHORIZATION);
+        if (ObjectUtils.isEmpty(header) || !header.startsWith(BEARER)) {
             return false;
         }
 
@@ -90,13 +92,9 @@ public class JwtFilter extends OncePerRequestFilter {
     }
 
     private String getAccessToken(HttpServletRequest request) {
-        String header = request.getHeader("Authorization");
+        String header = request.getHeader(AUTHORIZATION);
         String token = header.split(" ")[1].trim();
         return token;
-    }
-
-    public String getCurrentUser() {
-        return username;
     }
 
 }

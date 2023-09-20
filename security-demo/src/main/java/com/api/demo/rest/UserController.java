@@ -1,9 +1,7 @@
 package com.api.demo.rest;
 
-import com.api.demo.constants.DemoConstants;
 import com.api.demo.dto.UserDTO;
 import com.api.demo.service.UserService;
-import com.api.demo.utils.ResponseUtils;
 import jakarta.annotation.security.RolesAllowed;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -20,23 +18,13 @@ public class UserController {
     private UserService userService;
 
     @PostMapping("/signup")
-    public ResponseEntity<String> registrarUsuario(@RequestBody(required = true) UserDTO userDTO) {
-        try {
-            return userService.signUp(userDTO);
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        }
-        return ResponseUtils.getResponseEntity(DemoConstants.SOMETHING_WENT_WRONG, HttpStatus.INTERNAL_SERVER_ERROR);
+    public ResponseEntity<String> createUser(@RequestBody(required = true) UserDTO userDTO) {
+        return userService.signUp(userDTO);
     }
 
     @PostMapping("/login")
     public ResponseEntity<String> login(@RequestBody(required = true) UserDTO userDTO) {
-        try {
-            return userService.login(userDTO);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return ResponseUtils.getResponseEntity(DemoConstants.SOMETHING_WENT_WRONG, HttpStatus.INTERNAL_SERVER_ERROR);
+        return userService.login(userDTO);
     }
 
     @GetMapping("/greetings")
